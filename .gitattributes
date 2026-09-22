@@ -1,0 +1,12 @@
+# Normalize line endings. Checkout is CRLF on Windows, LF elsewhere.
+* text=auto eol=lf
+
+# Binary assets
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.woff binary
+*.woff2 binary
