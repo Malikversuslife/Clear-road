@@ -6,8 +6,22 @@
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-night-50: oklch(0.97 0.011 248);
+  --color-night-100: oklch(0.94 0.016 249);
+  --color-night-200: oklch(0.88 0.022 250);
+  --color-night-300: oklch(0.8 0.026 252);
+  --color-night-400: oklch(0.7 0.03 254);
+  --color-night-500: oklch(0.6 0.032 256);
+  --color-night-600: oklch(0.5 0.033 258);
+  --color-night-700: oklch(0.4 0.032 260);
+  --color-night-800: oklch(0.3 0.028 262);
+  --color-night-900: oklch(0.22 0.024 263);
+  --color-night-950: oklch(0.16 0.02 264);
+  --color-surface: oklch(0.2 0.02 264);
+  --color-ink: oklch(0.92 0.01 200);
+  --color-lime: oklch(0.86 0.21 122);
+  --color-coral: oklch(0.66 0.19 22);
+  --color-cream: oklch(0.94 0.03 95);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

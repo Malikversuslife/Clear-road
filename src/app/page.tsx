@@ -1,13 +1,19 @@
-export default function Home() {
+import { MapShell } from "../features/map/map-shell";
+
+export const metadata = {
+  title: "Clear Road - Lagos live map",
+  description:
+    "Clear Road - the Lagos night map. Ephemeral, explicit-only locate. See what is ahead.",
+};
+
+export default function HomePage() {
+  // h-dvh (not min-h-screen): a definite parent height is required for the
+  // MapShell `h-full` cascade, otherwise the map container collapses to 0 and
+  // Maplibre falls back to a 300px default canvas (blank navy slab + controls
+  // floating off its bounds). Regression-checked via browser CDP.
   return (
-    <main className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-        CLEAR ROAD
-      </h1>
-      <p className="text-sm uppercase tracking-[0.35em] text-zinc-500 dark:text-zinc-400">
-        See what&apos;s ahead.
-      </p>
-      <p className="text-sm text-zinc-400 dark:text-zinc-500">Foundation ready.</p>
+    <main className="relative flex h-dvh flex-col overflow-hidden bg-night-950 text-cream">
+      <MapShell accent="lime" />
     </main>
   );
 }

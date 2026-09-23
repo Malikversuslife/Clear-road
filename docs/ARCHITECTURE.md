@@ -2,14 +2,46 @@
 
 ## Runtime shape
 
-- **Next.js 16 App Router** (Turbopack, TypeScript). M0B ships a single static landing
-  page; feature routes land in later milestones.
+- **Next.js 16 App Router** (Turbopack, TypeScript). M1 ships the `/` route as a
+  live Lagos night map (client-only MapLibre surface under an SSR-safe shell).
 - **Supabase** (Postgres + PostGIS + auth + storage) as the backend. The browser talks
   to Supabase **only through security-definer RPC functions**, never directly to base
   tables. Realtime is enabled by migration `00016` and guarded so unauthenticated
   clients never see anything they could not query themselves.
 - **Anonymous auth.** Every visitor gets a Supabase anonymous in-app user; `auth.uid()`
   is the session key. This is the entire identity model — no accounts.
+
+## Map feature (`src/features/map/`)
+
+The live map is a small, deliberately layered module. Only MapLibre GL JS is used
+(it is the app's only map library), and it loads strictly in the browser.
+
+| File                 | Role                                                                                  | SSR?   |
+| -------------------- | ------------------------------------------------------------------------------------- | ------ |
+| `config.ts`          | Pure constants: Lagos centre/default viewport, `TileProvider` seam, style builder     | safe   |
+| `locate.ts`          | Pure locate state machine (reducer: idle → requesting → available/denied/unavailable) | safe   |
+| `use-geolocation.ts` | Browser hook: one discrete `getCurrentPosition`, ephemeral, button-only               | client |
+| `map-view.tsx`       | MapLibre surface with a no-blank-screen failure panel + retry                         | client |
+| `map-shell.tsx`      | SSR-safe host (dynamic `ssr:false`) + locate control overlay                          | client |
+
+### Tile provider seam
+
+The default vector source is OpenFreeMap's keyless `dark` style backed by
+OpenMapTiles data. This is an honest **development** choice: it is a public
+fair-use instance, not a production SLA. The seam to swap is one place:
+`DEFAULT_TILE_PROVIDER` in `config.ts`, or feeding a different provider into
+`createClearRoadStyle(provider)`. Attribution is never stripped.
+
+### Locate privacy contract (enforced in code + tests)
+
+- **Explicit action only** — the locate button press is the sole trigger; nothing
+  runs on mount / focus / visibilitychange and nothing auto-starts.
+- **Ephemeral** — a fix lives in reducer/React memory only; no localStorage,
+  sessionStorage, cookies, or Supabase write. Never `watchPosition`.
+- **First-class failure** — `denied` / `unavailable` are honest UI states; the map
+  stays fully usable and never becomes the hostage of a permission screen.
+- The reducer itself rejects `succeed`/`fail` unless a request is actually in
+  flight, so a stale callback can never inject a fix into a denied/unavailable state.
 
 ## Layers
 

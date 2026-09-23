@@ -6,3 +6,5 @@ coverage
 next-env.d.ts
 package-lock.json
 supabase/migrations
+.oracle-tmp/
+public/maplibre/
