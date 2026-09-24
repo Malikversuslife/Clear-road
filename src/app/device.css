@@ -809,3 +809,29 @@
     animation: none;
   }
 }
+
+/* A narrow left-hand rail leaves the mobile map centre open. */
+@media (max-width: 767px) {
+  .device-frame .maplibregl-ctrl-top-right {
+    top: 118px;
+    bottom: auto;
+    left: 10px;
+    right: auto;
+  }
+  .device-frame .maplibregl-ctrl-top-right .maplibregl-ctrl {
+    margin: 0;
+  }
+  .device-frame .maplibregl-ctrl-group {
+    flex-direction: column;
+  }
+  .device-frame .maplibregl-ctrl-group button + button {
+    border-left: 0;
+    border-top: 2px solid var(--device-black);
+  }
+  .device-frame .maplibregl-ctrl-attrib.maplibregl-ctrl {
+    max-width: calc(100vw - 100px);
+  }
+  :is(.device-frame--detail, .device-frame--report) .terminal-sheet {
+    max-height: min(52dvh, calc(100% - 280px));
+  }
+}
