@@ -7,6 +7,7 @@ import { SightingDetail } from "../sightings/sighting-detail";
 import { DeviceHeader, LocateIcon } from "@/components/device-chrome";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { BasemapMode } from "./basemap";
 import { DEFAULT_VIEWPORT } from "./config";
 import { useGeolocation } from "./use-geolocation";
 import {
@@ -38,6 +39,8 @@ export interface MapShellProps {
 
 export function MapShell({ accent }: MapShellProps) {
   const { state: locationState, request: requestLocation } = useGeolocation();
+  const [basemap, setBasemap] = useState<BasemapMode>("map");
+  const satelliteKey = process.env.NEXT_PUBLIC_MAPTILER_KEY?.trim() ?? "";
   const [areaName, setAreaName] = useState("LAGOS");
   const [sightings, setSightings] = useState<PublicSighting[]>([]);
   const [selectedSightingId, setSelectedSightingId] = useState<string | null>(null);
@@ -155,11 +158,15 @@ export function MapShell({ accent }: MapShellProps) {
   return (
     <div
       className={`map-shell device-frame relative min-h-0 w-full overflow-hidden bg-night-950 ${!reportIsOpen ? (selectedSighting ? "device-frame--detail" : "device-frame--nearby") : "device-frame--report"}`}
+      data-basemap={basemap}
       data-report-phase={reportFlow.phase}
       style={{ flex: "1 1 0%", minHeight: 0 }}
     >
       <MapView
         accent={accent}
+        basemap={basemap}
+        satelliteKey={satelliteKey}
+        onBasemapChange={setBasemap}
         locatePosition={locationState.position}
         onAreaChange={setAreaName}
         sightings={sightings}
@@ -170,7 +177,12 @@ export function MapShell({ accent }: MapShellProps) {
         reportLocation={reportLocation}
         onReportLocationChange={setReportLocation}
       />
-      <DeviceHeader areaName={areaName} />
+      <DeviceHeader
+        areaName={areaName}
+        basemap={basemap}
+        onBasemapChange={setBasemap}
+        satelliteAvailable={Boolean(satelliteKey)}
+      />
       <div className="map-locate-control absolute right-[max(1rem,env(safe-area-inset-right))] z-20 flex flex-col items-end gap-3">
         <button
           type="button"

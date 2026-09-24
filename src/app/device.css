@@ -835,3 +835,175 @@
     max-height: min(52dvh, calc(100% - 280px));
   }
 }
+
+.device-header__tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+  max-width: 38%;
+  gap: 5px;
+}
+.device-header__tools .device-city {
+  max-width: 100%;
+}
+.basemap-switch {
+  display: flex;
+  pointer-events: auto;
+  border: 2px solid var(--device-black);
+  border-radius: 4px;
+  box-shadow: 2px 3px 0 var(--device-black);
+  background: var(--device-cream);
+}
+.basemap-switch button {
+  min-height: 44px;
+  padding: 0 7px;
+  font:
+    800 9px/1 var(--font-geist-mono),
+    monospace;
+  color: var(--device-black);
+  cursor: pointer;
+}
+.basemap-switch button + button {
+  border-left: 2px solid var(--device-black);
+}
+.basemap-switch button[aria-pressed="true"] {
+  background: var(--device-lime);
+}
+.basemap-switch button:focus-visible {
+  outline: 3px solid var(--device-coral);
+  outline-offset: 2px;
+}
+.device-header--switcher {
+  padding-bottom: 5px;
+}
+.device-header--switcher .device-city {
+  margin-top: 0;
+  padding-block: 5px;
+}
+.device-header--switcher .device-city__caption {
+  display: none;
+}
+.satellite-credit {
+  position: absolute;
+  z-index: 10;
+  left: 10px;
+  bottom: calc(var(--sheet-occupied-height, 0px) + 24px);
+  padding: 4px;
+  background: var(--device-cream);
+  color: var(--device-black);
+}
+.satellite-credit img {
+  display: block;
+}
+.satellite-credit span {
+  display: block;
+  font:
+    7px/1.5 var(--font-geist-mono),
+    monospace;
+}
+.device-frame[data-basemap="satellite"] .maplibregl-ctrl-attrib {
+  max-width: calc(100vw - 140px);
+}
+.satellite-error {
+  position: absolute;
+  top: 120px;
+  right: 10px;
+  max-width: 220px;
+  z-index: 30;
+  padding: 8px;
+  background: var(--device-cream);
+  color: var(--device-black);
+  font:
+    11px/1.5 var(--font-geist-mono),
+    monospace;
+  border: var(--device-border);
+}
+.satellite-error button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 22px;
+}
+@media (max-width: 359px) {
+  .device-header--switcher {
+    padding-inline: 6px;
+    gap: 5px;
+  }
+  .device-header--switcher .device-brand h1 {
+    font-size: 18px;
+    padding-inline: 7px;
+  }
+  .device-header--switcher .device-brand p {
+    font-size: 8px;
+    padding-inline: 5px;
+  }
+  .device-header--switcher .device-header__tools {
+    max-width: 44%;
+  }
+}
+@media (min-width: 768px) {
+  .device-header--switcher {
+    padding-bottom: 18px;
+  }
+  .device-header--switcher .device-header__tools {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+  .device-header--switcher .device-city__caption {
+    display: block;
+  }
+  .basemap-switch button {
+    font-size: 11px;
+    padding-inline: 12px;
+  }
+  .satellite-credit {
+    left: auto;
+    right: 22px;
+    bottom: calc(var(--map-bottom-reserved) + var(--map-attribution-height) + 85px);
+  }
+  .device-frame[data-basemap="satellite"] .maplibregl-ctrl-attrib {
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 767px) {
+  .device-header--switcher {
+    padding-top: 12px;
+  }
+  .device-header--switcher .device-header__tools {
+    gap: 4px;
+  }
+  .device-header--switcher .device-city {
+    padding-block: 4px;
+  }
+  .satellite-credit {
+    bottom: calc(var(--sheet-occupied-height, 0px) + 4px);
+  }
+  .satellite-credit img {
+    width: 80px;
+    height: 22px;
+  }
+  .device-frame[data-basemap="satellite"] .map-locate-control {
+    bottom: min(
+      calc(var(--sheet-occupied-height, 0px) + var(--map-attribution-height) + 32px),
+      calc(100% - 180px)
+    );
+  }
+}
+
+/* Keep full imagery credits readable on phones with tall browser bars. */
+@media (max-width: 767px) and (max-height: 650px) {
+  .device-frame--nearby[data-basemap="satellite"] .terminal-sheet__body {
+    padding-block: 4px;
+  }
+  .device-frame--nearby[data-basemap="satellite"] .terminal-sheet__heading {
+    padding-block: 6px 4px;
+  }
+  .device-frame--nearby[data-basemap="satellite"] .terminal-sheet__footer {
+    padding-bottom: 8px;
+  }
+  :is(.device-frame--detail, .device-frame--report)[data-basemap="satellite"] .terminal-sheet {
+    max-height: min(52dvh, calc(100% - 340px));
+  }
+}

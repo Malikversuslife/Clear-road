@@ -12,6 +12,7 @@ import {
 import { createSightingMarkerElement } from "../sightings/markers";
 import { visibleRadiusKm, type PublicSighting } from "../sightings/sightings";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { applyBasemap, SATELLITE_SOURCE, type BasemapMode } from "./basemap";
 import type { LocatePosition } from "./locate";
 
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
@@ -45,6 +46,9 @@ maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 export interface MapViewProps {
   /** Brand accent Tailwind color token for the retry chip. */
   accent: string;
+  basemap: BasemapMode;
+  satelliteKey: string;
+  onBasemapChange: (mode: BasemapMode) => void;
   locatePosition: LocatePosition | null;
   onAreaChange: (name: string) => void;
   sightings: readonly PublicSighting[];
@@ -58,6 +62,9 @@ export interface MapViewProps {
 
 export function MapView({
   accent,
+  basemap,
+  satelliteKey,
+  onBasemapChange,
   locatePosition,
   onAreaChange,
   sightings,
@@ -77,6 +84,7 @@ export function MapView({
   const viewportChangeRef = useRef(onViewportChange);
   const reportLocationChangeRef = useRef(onReportLocationChange);
   const reportPlacementRef = useRef(reportPlacementMode);
+  const [satelliteError, setSatelliteError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [bootFailed, setBootFailed] = useState(false);
   const [basemapDegraded, setBasemapDegraded] = useState(false);
@@ -160,6 +168,7 @@ export function MapView({
         sourceId?: string;
         tile?: unknown;
       };
+      if (detail.sourceId === SATELLITE_SOURCE) return;
       if (detail.sourceId === NIGHT_SOURCE_ID || detail.tile) {
         setBasemapDegraded(true);
         return;
@@ -261,6 +270,58 @@ export function MapView({
     };
   }, [locatePosition, retryKey]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => applyBasemap(map, basemap, satelliteKey);
+    const fail = (event: maplibregl.ErrorEvent) => {
+      if (
+        (event as maplibregl.ErrorEvent & { sourceId?: string }).sourceId !== SATELLITE_SOURCE ||
+        basemap !== "satellite"
+      )
+        return;
+      applyBasemap(map, "map", satelliteKey);
+      if (map.getLayer(SATELLITE_SOURCE)) map.removeLayer(SATELLITE_SOURCE);
+      if (map.getSource(SATELLITE_SOURCE)) map.removeSource(SATELLITE_SOURCE);
+      onBasemapChange("map");
+      setSatelliteError(true);
+    };
+    const loaded = (event: maplibregl.MapSourceDataEvent) => {
+      if (event.sourceId === SATELLITE_SOURCE && event.isSourceLoaded) setSatelliteError(false);
+    };
+    map.on("load", apply);
+    map.on("error", fail);
+    map.on("sourcedata", loaded);
+    if (map.getLayer("highway_major_casing")) apply();
+    return () => {
+      map.off("load", apply);
+      map.off("error", fail);
+      map.off("sourcedata", loaded);
+    };
+  }, [basemap, satelliteKey, onBasemapChange, retryKey]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const attribution = map.getContainer().querySelector(".maplibregl-ctrl-attrib");
+    const shell = map.getContainer().closest<HTMLElement>(".map-shell");
+    const surface = map.getContainer().parentElement;
+    if (!attribution || !shell || !surface) return;
+    const measure = () => {
+      const height = Math.max(60, attribution.getBoundingClientRect().height + 12) + "px";
+      shell.style.setProperty("--map-attribution-height", height);
+      surface.style.setProperty("--map-attribution-height", height);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(attribution);
+    measure();
+    return () => {
+      observer.disconnect();
+      shell.style.removeProperty("--map-attribution-height");
+      surface.style.removeProperty("--map-attribution-height");
+    };
+  }, [retryKey]);
+
   const selected = sightings.find((sighting) => sighting.id === selectedSightingId);
   const selectedLat = selected?.location.lat;
   const selectedLng = selected?.location.lng;
@@ -321,6 +382,36 @@ export function MapView({
         aria-label={NIGHT_TITLE}
         title={NIGHT_TITLE}
       />
+      {basemap === "satellite" && (
+        <a
+          className="satellite-credit"
+          href="https://www.maptiler.com"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {/* Provider-required logo; direct asset avoids image proxying. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://api.maptiler.com/resources/logo.svg"
+            alt="MapTiler"
+            width="88"
+            height="24"
+          />
+          <span>IMAGERY · NOT LIVE</span>
+        </a>
+      )}
+      {satelliteError && (
+        <div className="satellite-error" role="status">
+          Satellite unavailable. Map view restored.
+          <button
+            type="button"
+            onClick={() => setSatelliteError(false)}
+            aria-label="Dismiss satellite message"
+          >
+            ×
+          </button>
+        </div>
+      )}
       {bootFailed && (
         <div className="absolute inset-0 flex items-center justify-center bg-night-950 p-6">
           <div className="max-w-sm rounded-md border-2 border-night-600 bg-surface p-6 text-center">
