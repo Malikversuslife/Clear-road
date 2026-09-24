@@ -33,3 +33,19 @@ describe("report flow", () => {
     );
   });
 });
+
+it("preserves the draft when retrying a failed submission", () => {
+  const draft = {
+    ...startReportFlow({ lat: 6.52, lng: 3.38 }),
+    category: "road_hazard" as const,
+    note: "Design test",
+    phase: "review" as const,
+  };
+  const failed = reportFlowReducer(reportFlowReducer(draft, { type: "submit" }), {
+    type: "error",
+    message: "Unavailable",
+  });
+  const retry = reportFlowReducer(failed, { type: "back" });
+  expect(retry).toEqual({ ...draft, error: null });
+  expect(reportFlowReducer(retry, { type: "submit" }).phase).toBe("submitting");
+});

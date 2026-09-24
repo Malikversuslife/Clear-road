@@ -101,13 +101,13 @@ export function createClearRoadStyle(
       },
     },
     layers: [
-      { id: "background", type: "background", paint: { "background-color": "rgb(12,12,12)" } },
+      { id: "background", type: "background", paint: { "background-color": "#062344" } },
       {
         id: "water",
         type: "fill",
         source: NIGHT_SOURCE_ID,
         "source-layer": "water",
-        paint: { "fill-color": "rgb(27,27,29)" },
+        paint: { "fill-color": "#031326" },
       },
       {
         id: "landuse_residential",
@@ -115,7 +115,7 @@ export function createClearRoadStyle(
         source: NIGHT_SOURCE_ID,
         "source-layer": "landuse",
         filter: ["all", ["==", ["get", "class"], "residential"]],
-        paint: { "fill-color": "hsl(0,2%,5%)", "fill-opacity": 0.4 },
+        paint: { "fill-color": "#0b3960", "fill-opacity": 0.4 },
       },
       {
         id: "highway_major_casing",
@@ -127,7 +127,7 @@ export function createClearRoadStyle(
           ["match", ["get", "class"], ["primary", "secondary", "tertiary", "trunk"], true, false],
         ],
         paint: {
-          "line-color": "rgba(78,78,78,0.72)",
+          "line-color": "#020f23",
           "line-width": ["interpolate", ["exponential", 1.3], ["zoom"], 10, 2, 16, 4, 19, 9],
         },
       },
@@ -144,7 +144,7 @@ export function createClearRoadStyle(
         ],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": "rgb(38,38,38)",
+          "line-color": "#61d9ed",
           "line-width": ["interpolate", ["exponential", 1.3], ["zoom"], 10, 1, 16, 2, 19, 6],
         },
       },
@@ -161,7 +161,7 @@ export function createClearRoadStyle(
         ],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": "rgba(42,42,42,0.86)",
+          "line-color": "#237baf",
           "line-width": ["interpolate", ["exponential", 1.55], ["zoom"], 10, 1, 14, 2, 18, 8],
         },
       },
@@ -179,8 +179,8 @@ export function createClearRoadStyle(
           "text-size": 11,
         },
         paint: {
-          "text-color": "rgba(112,112,112,0.8)",
-          "text-halo-color": "rgb(12,12,12)",
+          "text-color": "#57bfdc",
+          "text-halo-color": "#062344",
           "text-halo-width": 1,
         },
       },
@@ -205,8 +205,8 @@ export function createClearRoadStyle(
           "text-transform": "uppercase",
         },
         paint: {
-          "text-color": "rgba(156,156,156,0.9)",
-          "text-halo-color": "rgb(8,8,8)",
+          "text-color": "#b4dfec",
+          "text-halo-color": "#031326",
           "text-halo-width": 1,
         },
       },
@@ -231,8 +231,8 @@ export function createClearRoadStyle(
           "text-transform": "uppercase",
         },
         paint: {
-          "text-color": "rgba(190,190,190,0.95)",
-          "text-halo-color": "rgb(8,8,8)",
+          "text-color": "#fff3d5",
+          "text-halo-color": "#031326",
           "text-halo-width": 1.5,
         },
       },
@@ -256,8 +256,8 @@ export function createClearRoadStyle(
           "text-transform": "uppercase",
         },
         paint: {
-          "text-color": "rgba(118,118,118,0.9)",
-          "text-halo-color": "rgb(8,8,8)",
+          "text-color": "#c7e6ef",
+          "text-halo-color": "#031326",
           "text-halo-width": 1,
         },
       },

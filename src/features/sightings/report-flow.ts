@@ -54,6 +54,13 @@ export function reportFlowReducer(
       if (state.phase === "context") return { ...state, phase: "review" };
       return state;
     case "back":
+      if (state.phase === "error") {
+        return {
+          ...state,
+          phase: state.category && state.location ? "review" : "category",
+          error: null,
+        };
+      }
       if (state.phase === "location") return { ...state, phase: "category" };
       if (state.phase === "context") return { ...state, phase: "location" };
       if (state.phase === "review") return { ...state, phase: "context" };

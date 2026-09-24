@@ -102,6 +102,7 @@ export function MapView({
       attributionControl: { compact: false },
     });
     mapRef.current = map;
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
 
     const publishViewport = () => {
       const center = map.getCenter();
@@ -200,6 +201,52 @@ export function MapView({
       .addTo(map);
   }, [reportLocation, retryKey]);
 
+  const selected = sightings.find((sighting) => sighting.id === selectedSightingId);
+  const selectedLat = selected?.location.lat;
+  const selectedLng = selected?.location.lng;
+
+  // Keep the selected signal in the exposed map when the detail panel opens.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || selectedLat === undefined || selectedLng === undefined) return;
+    const container = map.getContainer();
+    const shell = container.closest(".map-shell");
+    const sheet = shell?.querySelector(".terminal-sheet");
+    const header = shell?.querySelector(".device-header");
+    if (!sheet || !header) return;
+    const reveal = () => {
+      const bounds = container.getBoundingClientRect();
+      const panel = sheet.getBoundingClientRect();
+      const top = header.getBoundingClientRect().bottom - bounds.top + 24;
+      const controlTop =
+        shell?.querySelector(".map-locate-control")?.getBoundingClientRect().top ?? panel.top;
+      const bottom =
+        window.innerWidth < 768
+          ? Math.min(panel.top, controlTop) - bounds.top - 28
+          : bounds.height - 24;
+      if (bottom <= top) return;
+      const point = map.project([selectedLng, selectedLat]);
+      const targetY = (top + bottom) / 2;
+      const targetX = bounds.width / 2;
+      if (Math.abs(point.x - targetX) > 1 || Math.abs(point.y - targetY) > 1) {
+        map.panBy([point.x - targetX, point.y - targetY], { duration: 0 });
+      }
+    };
+    let frame = 0;
+    const scheduleReveal = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(reveal);
+    };
+    const observer = new ResizeObserver(scheduleReveal);
+    observer.observe(sheet);
+    observer.observe(container);
+    scheduleReveal();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [selectedLat, selectedLng, selectedSightingId, retryKey]);
+
   return (
     <div className="map-view-surface relative h-full w-full overflow-hidden bg-night-950">
       {/* MapLibre docks the attribution row at the container's bottom edge but
@@ -235,7 +282,7 @@ export function MapView({
         </div>
       )}
       {!bootFailed && basemapDegraded && (
-        <div className="absolute left-1/2 top-[max(2.75rem,calc(env(safe-area-inset-top)+2.75rem))] z-20 -translate-x-1/2">
+        <div className="map-basemap-alert absolute left-1/2 top-[max(2.75rem,calc(env(safe-area-inset-top)+2.75rem))] z-20 -translate-x-1/2">
           <div className="flex items-center gap-3 border border-coral/60 bg-night-950/85 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-cream backdrop-blur-sm">
             <span className="animate-pulse text-coral">basemap hiccuped</span>
             <button
