@@ -34,7 +34,7 @@ describe("satellite mode", () => {
   });
   it("uses TileJSON so provider credits and coverage metadata are retained", () => {
     expect(satelliteSource(" a&b ").url).toBe(
-      "https://api.maptiler.com/tiles/satellite/tiles.json?key=a%26b",
+      "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=a%26b",
     );
   });
 });

@@ -5,7 +5,7 @@ export function satelliteSource(key: string): RasterSourceSpecification {
   return {
     type: "raster",
     url:
-      "https://api.maptiler.com/tiles/satellite/tiles.json?key=" +
+      "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=" +
       encodeURIComponent(key.trim()),
     tileSize: 256,
   };
