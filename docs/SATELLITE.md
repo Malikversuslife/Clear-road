@@ -8,7 +8,7 @@ The default OpenFreeMap map remains keyless. Satellite is optional and the heade
 4. Redeploy: Next.js embeds NEXT_PUBLIC values at build time.
 5. Verify real imagery loads, provider credits and the linked logo remain visible, and switching back preserves the camera, selected reports, report draft, and location marker.
 
-Implementation uses MapTiler satellite-v4 TileJSON so tile URLs, coverage and provider attribution are supplied by the provider. The required linked MapTiler logo is included for free accounts. Existing OpenFreeMap/OpenStreetMap credits remain visible for the vector roads and labels.
+Implementation uses MapTiler satellite TileJSON so tile URLs, coverage and provider attribution are supplied by the provider. The required linked MapTiler logo is included for free accounts. Existing OpenFreeMap/OpenStreetMap credits remain visible for the vector roads and labels.
 
 Satellite requests are made only after selection. Imagery failures restore Map mode and show a dismissible message. Camera and report state are never reset by switching; location remains explicit and ephemeral. Imagery is labelled as not live.
 
