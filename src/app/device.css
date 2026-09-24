@@ -131,9 +131,11 @@
 .device-button--lime {
   background: var(--device-lime);
 }
-.device-button:hover,
-:is(.device-frame--nearby, .device-frame--detail, .device-frame--report) .terminal-action:hover {
-  background: white;
+@media (hover: hover) and (pointer: fine) {
+  .device-button:hover,
+  :is(.device-frame--nearby, .device-frame--detail, .device-frame--report) .terminal-action:hover {
+    background: white;
+  }
 }
 .device-button:active,
 :is(.device-frame--nearby, .device-frame--detail, .device-frame--report) .terminal-action:active {
@@ -708,4 +710,36 @@
 .device-frame .sighting-marker__glyph {
   width: 27px;
   height: 27px;
+}
+
+/* Keep nearby controls separate even when mobile browser chrome reduces height. */
+@media (max-width: 767px) {
+  .device-frame--nearby .map-locate-control {
+    right: 10px;
+    bottom: calc(var(--sheet-occupied-height, 0px) + var(--map-attribution-height) + 32px);
+    transition: none;
+  }
+  .device-frame--nearby .maplibregl-ctrl-top-right {
+    top: auto;
+    left: 10px;
+    right: auto;
+    bottom: calc(
+      var(--sheet-occupied-height, 0px) - var(--map-bottom-reserved) +
+        var(--map-attribution-height) + 30px
+    );
+  }
+  .device-frame--nearby .maplibregl-ctrl-group {
+    display: flex;
+  }
+  .device-frame--nearby .maplibregl-ctrl-group button + button {
+    border-top: 0;
+    border-left: 2px solid var(--device-black);
+  }
+  .device-frame--nearby .maplibregl-ctrl-top-right .maplibregl-ctrl {
+    margin: 0;
+  }
+  .device-frame--nearby .device-button {
+    padding-inline: 10px;
+    gap: 6px;
+  }
 }
