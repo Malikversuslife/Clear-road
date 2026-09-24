@@ -16,13 +16,15 @@
 The live map is a small, deliberately layered module. Only MapLibre GL JS is used
 (it is the app's only map library), and it loads strictly in the browser.
 
-| File                 | Role                                                                                  | SSR?   |
-| -------------------- | ------------------------------------------------------------------------------------- | ------ |
-| `config.ts`          | Pure constants: Lagos centre/default viewport, `TileProvider` seam, style builder     | safe   |
-| `locate.ts`          | Pure locate state machine (reducer: idle → requesting → available/denied/unavailable) | safe   |
-| `use-geolocation.ts` | Browser hook: one discrete `getCurrentPosition`, ephemeral, button-only               | client |
-| `map-view.tsx`       | MapLibre surface with a no-blank-screen failure panel + retry                         | client |
-| `map-shell.tsx`      | SSR-safe host (dynamic `ssr:false`) + locate control overlay                          | client |
+| File                             | Role                                                                                  | SSR?   |
+| -------------------------------- | ------------------------------------------------------------------------------------- | ------ |
+| `config.ts`                      | Pure constants: Lagos centre/default viewport, `TileProvider` seam, style builder     | safe   |
+| `locate.ts`                      | Pure locate state machine (reducer: idle → requesting → available/denied/unavailable) | safe   |
+| `use-geolocation.ts`             | Browser hook: one discrete `getCurrentPosition`, ephemeral, button-only               | client |
+| `map-view.tsx`                   | MapLibre surface with a no-blank-screen failure panel + retry                         | client |
+| `map-shell.tsx`                  | SSR-safe host (dynamic `ssr:false`) + locate control overlay                          | client |
+| `../sightings/`                  | Sanitized active-report client, signal markers, report flow, and pure display helpers | mixed  |
+| `../components/bottom-sheet.tsx` | Reusable terminal-drawer surface for nearby, detail, and report states                | client |
 
 ### Tile provider seam
 
@@ -42,6 +44,20 @@ fair-use instance, not a production SLA. The seam to swap is one place:
   stays fully usable and never becomes the hostage of a permission screen.
 - The reducer itself rejects `succeed`/`fail` unless a request is actually in
   flight, so a stale callback can never inject a fix into a denied/unavailable state.
+
+### M2 sightings contract
+
+Sightings use the existing security-definer RPCs only: `active_reports` reads a
+bounded radius around the visible map center, `get_my_session` establishes the
+temporary anonymous session, and `create_report` performs server-side category,
+coordinate, note, lifecycle, and confidence enforcement. The browser maps only
+the sanitized public response; it never receives reporter UUIDs, session IDs,
+moderation internals, or service-role data.
+
+Viewport reads are debounced and stale responses are discarded. Map movement is
+not written to Supabase, no GPS watcher is used, and M2 does not subscribe to
+realtime reports. Report location is deliberately selected on the map and is
+not silently replaced by the user's device location.
 
 ## Layers
 

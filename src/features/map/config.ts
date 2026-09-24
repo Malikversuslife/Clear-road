@@ -55,7 +55,8 @@ export const DEFAULT_TILE_PROVIDER: TileProvider = {
   id: "clear-road-openfreemap-dark",
   name: "OpenFreeMap dark (keyless vector)",
   styleUrl: "https://tiles.openfreemap.org/styles/dark",
-  attribution: "© OpenFreeMap © OpenMapTiles, Data from OpenStreetMap contributors",
+  attribution:
+    '<span class="clear-road-attribution__provider">© <a href="https://openfreemap.org/">OpenFreeMap</a> © <a href="https://openmaptiles.org/">OpenMapTiles</a></span> <span class="clear-road-attribution__data">Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></span>',
   licenseAndCosts:
     "keyless dev/fair-use public instance (no API key, no registration, no " +
     "cookies); production: self-host open-source server or sponsor public " +

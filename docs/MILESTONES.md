@@ -37,18 +37,27 @@ Local gates green; live-Supabase SQL verification still pending (see
 `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`
 (101/101, 10 files), `npm run build`.
 
-## M2 — Map-driven reporting (planned, NOT started)
+## M2 — Sightings (current)
 
-The original "Foundation UI" scope moves here so M1 could ship cleanly:
+**Status: complete.** The SEE → OPEN → REPORT → SEE loop is live against the
+existing sanitized report RPC contract.
 
-- Wire the RPCs to a live Supabase project; apply + verify all migrations live.
-- Map-based report feed around `get_active_reports` (Lagos region focus).
-- Create-report flow with live anonymous session bootstrap and validation errors
-  surfaced from `validation.ts` and the RPC `22023`/`CR*` codes.
-- Report detail (lifecycle + confidence badges, still-dey/don-clear actions, chat).
-- Flags (report/message) with curated reasons surfaced from `flags.ts`.
+- Bounded, debounced `active_reports` reads follow the visible map region.
+- Original pixel-signal markers cover all six report categories.
+- Mobile-first terminal bottom sheet supports nearby, detail, and report states.
+- Anonymous category → map location → optional context → review → submission flow.
+- Server-derived confidence and lifecycle are displayed without M3 controls or
+  safety inference; empty results never imply a clear or safe road.
+- Live verification covered public sanitization, anonymous mutation rejection,
+  malformed input rejection, successful creation, UI reconciliation, and fixture
+  cleanup.
 
-## M3 — Lifecycle & safety
+### M2 quality gates (all local, all green)
+
+`npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`
+(109/109, 12 files), `npm run build`.
+
+## M3 — Lifecycle & safety (planned, NOT started)
 
 - First responder / official escalation paths; `report_events` replay surface.
 - Automated STALE/DON_CLEAR closures surfaced through realtime push.

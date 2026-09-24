@@ -9,6 +9,8 @@ import {
   NIGHT_SOURCE_ID,
   NIGHT_TITLE,
 } from "./config";
+import { createSightingMarkerElement } from "../sightings/markers";
+import { visibleRadiusKm, type PublicSighting } from "../sightings/sightings";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
@@ -42,14 +44,43 @@ maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 export interface MapViewProps {
   /** Brand accent Tailwind color token for the retry chip. */
   accent: string;
+  sightings: readonly PublicSighting[];
+  selectedSightingId: string | null;
+  onSelectSighting: (id: string) => void;
+  onViewportChange: (viewport: { lat: number; lng: number; radiusKm: number }) => void;
+  reportPlacementMode: boolean;
+  reportLocation: { lat: number; lng: number } | null;
+  onReportLocationChange: (location: { lat: number; lng: number }) => void;
 }
 
-export function MapView({ accent }: MapViewProps) {
+export function MapView({
+  accent,
+  sightings,
+  selectedSightingId,
+  onSelectSighting,
+  onViewportChange,
+  reportPlacementMode,
+  reportLocation,
+  onReportLocationChange,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const markerRefs = useRef(new Map<string, maplibregl.Marker>());
+  const reportMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const selectSightingRef = useRef(onSelectSighting);
+  const viewportChangeRef = useRef(onViewportChange);
+  const reportLocationChangeRef = useRef(onReportLocationChange);
+  const reportPlacementRef = useRef(reportPlacementMode);
   const [retryKey, setRetryKey] = useState(0);
   const [bootFailed, setBootFailed] = useState(false);
   const [basemapDegraded, setBasemapDegraded] = useState(false);
+
+  useEffect(() => {
+    selectSightingRef.current = onSelectSighting;
+    viewportChangeRef.current = onViewportChange;
+    reportLocationChangeRef.current = onReportLocationChange;
+    reportPlacementRef.current = reportPlacementMode;
+  }, [onSelectSighting, onViewportChange, onReportLocationChange, reportPlacementMode]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -71,6 +102,19 @@ export function MapView({ accent }: MapViewProps) {
       attributionControl: { compact: false },
     });
     mapRef.current = map;
+
+    const publishViewport = () => {
+      const center = map.getCenter();
+      const bounds = map.getBounds();
+      viewportChangeRef.current({
+        lat: center.lat,
+        lng: center.lng,
+        radiusKm: visibleRadiusKm(
+          bounds.getNorth() - bounds.getSouth(),
+          bounds.getEast() - bounds.getWest(),
+        ),
+      });
+    };
 
     map.on("error", (event) => {
       if (disposed) return;
@@ -97,6 +141,13 @@ export function MapView({ accent }: MapViewProps) {
     map.on("load", () => {
       if (disposed) return;
       setBootFailed(false);
+      publishViewport();
+    });
+    map.on("moveend", publishViewport);
+    map.on("click", (event) => {
+      if (reportPlacementRef.current) {
+        reportLocationChangeRef.current({ lat: event.lngLat.lat, lng: event.lngLat.lng });
+      }
     });
 
     return () => {
@@ -106,8 +157,51 @@ export function MapView({ accent }: MapViewProps) {
     };
   }, [retryKey, accent]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const nextIds = new Set(sightings.map((sighting) => sighting.id));
+    for (const [id, marker] of markerRefs.current) {
+      if (!nextIds.has(id)) {
+        marker.remove();
+        markerRefs.current.delete(id);
+      }
+    }
+    for (const sighting of sightings) {
+      let marker = markerRefs.current.get(sighting.id);
+      if (!marker) {
+        marker = new maplibregl.Marker({
+          element: createSightingMarkerElement(sighting, (id) => selectSightingRef.current(id)),
+          anchor: "center",
+        });
+        markerRefs.current.set(sighting.id, marker);
+        marker.setLngLat([sighting.location.lng, sighting.location.lat]).addTo(map);
+      }
+      marker.setLngLat([sighting.location.lng, sighting.location.lat]);
+      marker
+        .getElement()
+        .classList.toggle("sighting-marker--active", selectedSightingId === sighting.id);
+      marker.getElement().setAttribute("aria-pressed", String(selectedSightingId === sighting.id));
+    }
+  }, [sightings, selectedSightingId, retryKey]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    reportMarkerRef.current?.remove();
+    reportMarkerRef.current = null;
+    if (!reportLocation) return;
+    const element = document.createElement("div");
+    element.className = "report-location-marker";
+    element.setAttribute("aria-label", "Report location");
+    element.title = "REPORT LOCATION";
+    reportMarkerRef.current = new maplibregl.Marker({ element, anchor: "center" })
+      .setLngLat([reportLocation.lng, reportLocation.lat])
+      .addTo(map);
+  }, [reportLocation, retryKey]);
+
   return (
-    <div className="relative h-full w-full overflow-hidden bg-night-950">
+    <div className="map-view-surface relative h-full w-full overflow-hidden bg-night-950">
       {/* MapLibre docks the attribution row at the container's bottom edge but
           renders it ~48px OFF that edge (measured via CDP). bottom-12 reserves
           that band INSIDE the viewport so the full non-compact attribution
