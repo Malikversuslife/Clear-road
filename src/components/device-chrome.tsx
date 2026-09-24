@@ -1,13 +1,14 @@
 /** Original Clear Road device chrome. Decoration carries no live-data claims. */
-export function DeviceHeader() {
+export function DeviceHeader({ areaName }: { areaName: string }) {
   return (
     <header className="device-header">
       <div className="device-brand">
         <h1>CLEAR ROAD</h1>
         <p>SEE WHAT&apos;S AHEAD.</p>
       </div>
-      <div className="device-city">
-        <span aria-hidden="true">↗</span> LAGOS
+      <div className="device-city" aria-label={`Viewing ${areaName}`} title={`Viewing ${areaName}`}>
+        <span className="device-city__dot" aria-hidden="true" />
+        <span className="device-city__name">{areaName}</span>
         <span className="device-city__caption">COMMUNITY MAP</span>
       </div>
     </header>

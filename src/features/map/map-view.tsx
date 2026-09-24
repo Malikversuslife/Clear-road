@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as maplibregl from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
@@ -12,6 +12,7 @@ import {
 import { createSightingMarkerElement } from "../sightings/markers";
 import { visibleRadiusKm, type PublicSighting } from "../sightings/sightings";
 import "maplibre-gl/dist/maplibre-gl.css";
+import type { LocatePosition } from "./locate";
 
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
@@ -44,6 +45,8 @@ maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 export interface MapViewProps {
   /** Brand accent Tailwind color token for the retry chip. */
   accent: string;
+  locatePosition: LocatePosition | null;
+  onAreaChange: (name: string) => void;
   sightings: readonly PublicSighting[];
   selectedSightingId: string | null;
   onSelectSighting: (id: string) => void;
@@ -55,6 +58,8 @@ export interface MapViewProps {
 
 export function MapView({
   accent,
+  locatePosition,
+  onAreaChange,
   sightings,
   selectedSightingId,
   onSelectSighting,
@@ -67,6 +72,7 @@ export function MapView({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRefs = useRef(new Map<string, maplibregl.Marker>());
   const reportMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const areaChangeRef = useRef(onAreaChange);
   const selectSightingRef = useRef(onSelectSighting);
   const viewportChangeRef = useRef(onViewportChange);
   const reportLocationChangeRef = useRef(onReportLocationChange);
@@ -76,11 +82,18 @@ export function MapView({
   const [basemapDegraded, setBasemapDegraded] = useState(false);
 
   useEffect(() => {
+    areaChangeRef.current = onAreaChange;
     selectSightingRef.current = onSelectSighting;
     viewportChangeRef.current = onViewportChange;
     reportLocationChangeRef.current = onReportLocationChange;
     reportPlacementRef.current = reportPlacementMode;
-  }, [onSelectSighting, onViewportChange, onReportLocationChange, reportPlacementMode]);
+  }, [
+    onAreaChange,
+    onSelectSighting,
+    onViewportChange,
+    onReportLocationChange,
+    reportPlacementMode,
+  ]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -104,7 +117,31 @@ export function MapView({
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
 
+    const publishArea = () => {
+      if (!map.isStyleLoaded()) return;
+      const center = map.getCenter();
+      const places = map.querySourceFeatures(NIGHT_SOURCE_ID, { sourceLayer: "place" });
+      let closest = Infinity;
+      let name = "MAP AREA";
+      for (const place of places) {
+        if (place.geometry.type !== "Point") continue;
+        const properties = place.properties;
+        if (!["city", "town", "village", "suburb", "neighbourhood"].includes(properties.class))
+          continue;
+        const label = properties.name_en || properties.name;
+        if (typeof label !== "string" || !label.trim()) continue;
+        const [lng, lat] = place.geometry.coordinates;
+        const distance = center.distanceTo(new maplibregl.LngLat(lng, lat));
+        if (distance < closest && distance < 30000) {
+          closest = distance;
+          name = label.toUpperCase();
+        }
+      }
+      areaChangeRef.current(name);
+    };
+    map.on("idle", publishArea);
     const publishViewport = () => {
+      areaChangeRef.current("MAP AREA");
       const center = map.getCenter();
       const bounds = map.getBounds();
       viewportChangeRef.current({
@@ -200,6 +237,29 @@ export function MapView({
       .setLngLat([reportLocation.lng, reportLocation.lat])
       .addTo(map);
   }, [reportLocation, retryKey]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !locatePosition) return;
+    const center: [number, number] = [locatePosition.longitude, locatePosition.latitude];
+    const shell = map.getContainer().closest(".map-shell");
+    const header = shell?.querySelector(".device-header")?.getBoundingClientRect();
+    const controls = shell?.querySelector(".map-locate-control")?.getBoundingClientRect();
+    const bounds = map.getContainer().getBoundingClientRect();
+    const top = header ? header.bottom - bounds.top : 0;
+    const bottom = window.innerWidth < 768 && controls ? controls.top - bounds.top : bounds.height;
+    const offset = (top + Math.max(top, bottom)) / 2 - bounds.height / 2;
+    map.jumpTo({ center, zoom: Math.max(map.getZoom(), 14) });
+    map.panBy([0, -offset], { duration: 0 });
+    const element = document.createElement("div");
+    element.className = "user-location-marker";
+    element.setAttribute("role", "img");
+    element.setAttribute("aria-label", "Your location");
+    const marker = new maplibregl.Marker({ element }).setLngLat(center).addTo(map);
+    return () => {
+      marker.remove();
+    };
+  }, [locatePosition, retryKey]);
 
   const selected = sightings.find((sighting) => sighting.id === selectedSightingId);
   const selectedLat = selected?.location.lat;

@@ -743,3 +743,69 @@
     gap: 6px;
   }
 }
+
+.device-city {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  max-width: 38%;
+  border-radius: 9px;
+}
+.device-city__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.device-city__caption {
+  grid-column: 1 / -1;
+}
+.device-city__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--device-lime);
+  animation: badge-pulse 2s ease-out infinite;
+}
+@keyframes badge-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 #d9fb5000;
+  }
+  50% {
+    box-shadow: 0 0 0 5px #d9fb5033;
+  }
+}
+.user-location-marker {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--device-cream);
+  border-radius: 50%;
+  background: var(--device-lime);
+  box-shadow: 0 0 0 5px #06234499;
+}
+.locate-feedback {
+  position: absolute;
+  z-index: 30;
+  top: 118px;
+  left: 12px;
+  right: 12px;
+  padding: 10px;
+  border: var(--device-border);
+  background: var(--device-cream);
+  color: var(--device-black);
+  font:
+    12px/1.4 var(--font-geist-mono),
+    monospace;
+}
+@media (min-width: 768px) {
+  .locate-feedback {
+    right: 100px;
+    left: auto;
+    max-width: 320px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .device-city__dot {
+    animation: none;
+  }
+}

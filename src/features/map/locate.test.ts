@@ -144,3 +144,14 @@ describe("locate privacy — no persistence on any path", () => {
     }
   });
 });
+
+it("allows explicit retry after denial or timeout", () => {
+  for (const reason of ["permission-denied", "timeout"] as const) {
+    const failed = locateReducer(INITIAL_LOCATE_STATE, { type: "fail", reason });
+    expect(locateReducer(failed, { type: "request" })).toEqual({
+      phase: "requesting",
+      position: null,
+      failure: null,
+    });
+  }
+});

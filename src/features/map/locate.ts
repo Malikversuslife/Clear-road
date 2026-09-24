@@ -56,7 +56,7 @@ export function toLocatePosition(position: GeolocationPosition): LocatePosition 
 }
 
 /**
- * Pure transition function. `request` is only honoured from `idle` (or
+ * Pure transition function. `request` is honoured from every settled state (including
  * `available`, where it points Level One at a fresher fix — still one discrete
  * call, never a watch). Denial/unavailability are first-class, non-blocking
  * states; the map stays fully usable in every phase.
@@ -64,7 +64,7 @@ export function toLocatePosition(position: GeolocationPosition): LocatePosition 
 export function locateReducer(state: LocateState, action: LocateAction): LocateState {
   switch (action.type) {
     case "request":
-      if (state.phase === "idle" || state.phase === "available") {
+      if (state.phase !== "requesting") {
         return { ...state, phase: "requesting", failure: null };
       }
       return state;

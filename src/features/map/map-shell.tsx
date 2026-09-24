@@ -38,6 +38,7 @@ export interface MapShellProps {
 
 export function MapShell({ accent }: MapShellProps) {
   const { state: locationState, request: requestLocation } = useGeolocation();
+  const [areaName, setAreaName] = useState("LAGOS");
   const [sightings, setSightings] = useState<PublicSighting[]>([]);
   const [selectedSightingId, setSelectedSightingId] = useState<string | null>(null);
   const [sightingsStatus, setSightingsStatus] = useState<SightingsStatus>("idle");
@@ -159,6 +160,8 @@ export function MapShell({ accent }: MapShellProps) {
     >
       <MapView
         accent={accent}
+        locatePosition={locationState.position}
+        onAreaChange={setAreaName}
         sightings={sightings}
         selectedSightingId={selectedSightingId}
         onSelectSighting={setSelectedSightingId}
@@ -167,7 +170,7 @@ export function MapShell({ accent }: MapShellProps) {
         reportLocation={reportLocation}
         onReportLocationChange={setReportLocation}
       />
-      <DeviceHeader />
+      <DeviceHeader areaName={areaName} />
       <div className="map-locate-control absolute right-[max(1rem,env(safe-area-inset-right))] z-20 flex flex-col items-end gap-3">
         <button
           type="button"
@@ -176,9 +179,18 @@ export function MapShell({ accent }: MapShellProps) {
           className="device-button device-button--lime"
         >
           <LocateIcon />
-          {locationState.phase === "requesting" ? "fixing..." : "locate me"}
+          {locationState.phase === "requesting" ? "locating..." : "locate me"}
         </button>
       </div>
+      {locationState.failure && (
+        <p className="locate-feedback" role="status">
+          {locationState.failure === "permission-denied"
+            ? "Location blocked. Allow location for this site in your browser settings, then tap Locate me again."
+            : locationState.failure === "timeout"
+              ? "Location timed out. Tap Locate me to try again."
+              : "Location unavailable. Check location services and tap Locate me to retry."}
+        </p>
+      )}
       <BottomSheet
         open
         title={sheetTitle}
