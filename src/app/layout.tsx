@@ -13,6 +13,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://clear-road-zeta.vercel.app"),
+  openGraph: {
+    title: "CLEAR ROAD",
+    description: "SEE WHAT'S AHEAD. Crowdsourced road awareness for Lagos.",
+    type: "website",
+    images: [
+      {
+        url: "/clear-road-desktop.png",
+        width: 1440,
+        height: 900,
+        alt: "Clear Road desktop map of Lagos with nearby road sightings and reporting controls.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [
+      {
+        url: "/clear-road-desktop.png",
+        alt: "Clear Road desktop map of Lagos with nearby road sightings and reporting controls.",
+      },
+    ],
+  },
   title: "CLEAR ROAD",
   description: "SEE WHAT'S AHEAD. Crowdsourced road awareness for Lagos.",
 };
