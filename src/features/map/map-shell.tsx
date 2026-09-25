@@ -39,6 +39,11 @@ export interface MapShellProps {
 
 export function MapShell({ accent }: MapShellProps) {
   const { state: locationState, request: requestLocation } = useGeolocation();
+  const [locationLabel, setLocationLabel] = useState<{
+    lat: number;
+    lng: number;
+    label: string;
+  } | null>(null);
   const [basemap, setBasemap] = useState<BasemapMode>("map");
   const satelliteKey = process.env.NEXT_PUBLIC_MAPTILER_KEY?.trim() ?? "";
   const [areaName, setAreaName] = useState("LAGOS");
@@ -144,6 +149,11 @@ export function MapShell({ accent }: MapShellProps) {
     }
   }, [fetchSightings, reportFlow]);
 
+  const namedPoint = reportFlow.location ?? selectedSighting?.location;
+  const pointLabel =
+    namedPoint && locationLabel?.lat === namedPoint.lat && locationLabel?.lng === namedPoint.lng
+      ? locationLabel.label
+      : "PINNED LOCATION";
   const reportIsOpen = reportFlow.phase !== "closed";
   const sheetTitle = reportIsOpen
     ? reportFlow.phase === "success"
@@ -169,6 +179,7 @@ export function MapShell({ accent }: MapShellProps) {
         onBasemapChange={setBasemap}
         locatePosition={locationState.position}
         onAreaChange={setAreaName}
+        onLocationLabel={setLocationLabel}
         sightings={sightings}
         selectedSightingId={selectedSightingId}
         onSelectSighting={setSelectedSightingId}
@@ -235,9 +246,13 @@ export function MapShell({ accent }: MapShellProps) {
         }
       >
         {reportIsOpen ? (
-          <ReportFlowPanel state={reportFlow} onDispatch={dispatchReport} />
+          <ReportFlowPanel
+            state={reportFlow}
+            onDispatch={dispatchReport}
+            locationLabel={pointLabel}
+          />
         ) : selectedSighting ? (
-          <SightingDetail sighting={selectedSighting} />
+          <SightingDetail sighting={selectedSighting} locationLabel={pointLabel} />
         ) : (
           <NearbyPanel
             count={sightings.length}

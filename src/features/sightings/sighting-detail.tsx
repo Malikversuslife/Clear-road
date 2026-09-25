@@ -7,7 +7,13 @@ import {
 } from "./sightings";
 
 /** Presentation only: all values come from the existing public report contract. */
-export function SightingDetail({ sighting }: { sighting: PublicSighting }) {
+export function SightingDetail({
+  sighting,
+  locationLabel = "PINNED LOCATION",
+}: {
+  sighting: PublicSighting;
+  locationLabel?: string;
+}) {
   const meta = getCategoryMeta(sighting.category);
   return (
     <article className="sighting-detail" aria-label={meta.label}>
@@ -38,9 +44,7 @@ export function SightingDetail({ sighting }: { sighting: PublicSighting }) {
         </div>
         <div className="sighting-detail__location">
           <dt>REPORT LOCATION</dt>
-          <dd>
-            {sighting.location.lat.toFixed(4)}, {sighting.location.lng.toFixed(4)}
-          </dd>
+          <dd>{locationLabel}</dd>
         </div>
       </dl>
       {sighting.note && (

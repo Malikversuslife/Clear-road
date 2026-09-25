@@ -5,6 +5,7 @@ import { getCategoryMeta, SIGHTING_CATEGORIES } from "./sightings";
 
 interface ReportPanelProps {
   state: ReportFlowState;
+  locationLabel?: string;
   onDispatch: Dispatch<ReportFlowAction>;
 }
 
@@ -29,7 +30,11 @@ function ReportProgress({ phase }: { phase: ReportFlowState["phase"] }) {
   );
 }
 
-export function ReportFlowPanel({ state, onDispatch }: ReportPanelProps) {
+export function ReportFlowPanel({
+  state,
+  onDispatch,
+  locationLabel = "PINNED LOCATION",
+}: ReportPanelProps) {
   const meta = state.category ? getCategoryMeta(state.category) : null;
   return (
     <div className="report-panel">
@@ -61,9 +66,7 @@ export function ReportFlowPanel({ state, onDispatch }: ReportPanelProps) {
           </p>
           <div className="terminal-coordinate">
             <span>REPORT LOCATION</span>
-            <strong>
-              {state.location?.lat.toFixed(4)}, {state.location?.lng.toFixed(4)}
-            </strong>
+            <strong>{locationLabel}</strong>
           </div>
         </>
       )}
@@ -101,9 +104,7 @@ export function ReportFlowPanel({ state, onDispatch }: ReportPanelProps) {
             </div>
             <div>
               <dt>REPORT LOCATION</dt>
-              <dd>
-                {state.location?.lat.toFixed(4)}, {state.location?.lng.toFixed(4)}
-              </dd>
+              <dd>{locationLabel}</dd>
             </div>
             {state.note && (
               <div>

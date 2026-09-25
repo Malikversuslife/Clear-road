@@ -1007,3 +1007,30 @@
     max-height: min(52dvh, calc(100% - 340px));
   }
 }
+
+/* Compact, always-visible credits; preserve every provider link. */
+.device-frame .maplibregl-ctrl-attrib.maplibregl-ctrl {
+  padding: 3px 5px !important;
+  border-width: 1px;
+  box-shadow: none;
+  font:
+    10px/1.25 Arial,
+    sans-serif;
+}
+.device-frame .clear-road-attribution__data {
+  display: inline;
+  margin: 0;
+}
+.device-frame .satellite-credit {
+  padding: 3px;
+}
+.device-frame .satellite-credit img {
+  width: 64px;
+  height: 18px;
+}
+.device-frame .satellite-credit span {
+  font-size: 6px;
+}
+.sighting-detail__location dd {
+  text-align: right;
+}

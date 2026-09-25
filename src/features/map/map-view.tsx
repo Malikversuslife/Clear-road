@@ -13,6 +13,7 @@ import { createSightingMarkerElement } from "../sightings/markers";
 import { visibleRadiusKm, type PublicSighting } from "../sightings/sightings";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { applyBasemap, SATELLITE_SOURCE, type BasemapMode } from "./basemap";
+import { nearbyArea } from "./area-name";
 import type { LocatePosition } from "./locate";
 
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
@@ -51,6 +52,7 @@ export interface MapViewProps {
   onBasemapChange: (mode: BasemapMode) => void;
   locatePosition: LocatePosition | null;
   onAreaChange: (name: string) => void;
+  onLocationLabel: (value: { lat: number; lng: number; label: string }) => void;
   sightings: readonly PublicSighting[];
   selectedSightingId: string | null;
   onSelectSighting: (id: string) => void;
@@ -67,6 +69,7 @@ export function MapView({
   onBasemapChange,
   locatePosition,
   onAreaChange,
+  onLocationLabel,
   sightings,
   selectedSightingId,
   onSelectSighting,
@@ -308,7 +311,7 @@ export function MapView({
     const surface = map.getContainer().parentElement;
     if (!attribution || !shell || !surface) return;
     const measure = () => {
-      const height = Math.max(60, attribution.getBoundingClientRect().height + 12) + "px";
+      const height = Math.max(32, attribution.getBoundingClientRect().height + 12) + "px";
       shell.style.setProperty("--map-attribution-height", height);
       surface.style.setProperty("--map-attribution-height", height);
     };
@@ -325,6 +328,42 @@ export function MapView({
   const selected = sightings.find((sighting) => sighting.id === selectedSightingId);
   const selectedLat = selected?.location.lat;
   const selectedLng = selected?.location.lng;
+
+  const namedLat = reportLocation?.lat ?? selectedLat;
+  const namedLng = reportLocation?.lng ?? selectedLng;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || namedLat === undefined || namedLng === undefined) return;
+    const resolve = () => {
+      if (!map.getSource(NIGHT_SOURCE_ID)) return;
+      const places = map
+        .querySourceFeatures(NIGHT_SOURCE_ID, { sourceLayer: "place" })
+        .flatMap((feature) => {
+          if (
+            feature.geometry.type !== "Point" ||
+            !["city", "town", "village", "suburb", "neighbourhood"].includes(
+              feature.properties.class,
+            )
+          )
+            return [];
+          const name = feature.properties.name_en || feature.properties.name;
+          if (typeof name !== "string") return [];
+          return [
+            { name, lng: feature.geometry.coordinates[0], lat: feature.geometry.coordinates[1] },
+          ];
+        });
+      onLocationLabel({
+        lat: namedLat,
+        lng: namedLng,
+        label: nearbyArea({ lat: namedLat, lng: namedLng }, places),
+      });
+    };
+    resolve();
+    map.on("idle", resolve);
+    return () => {
+      map.off("idle", resolve);
+    };
+  }, [namedLat, namedLng, onLocationLabel, retryKey]);
 
   // Keep the selected signal in the exposed map when the detail panel opens.
   useEffect(() => {
