@@ -35,6 +35,22 @@ begin
     where has_table_privilege(r, 'public.' || t, p)
   ) then raise exception 'Browser table-management privileges remain'; end if;
 end $$;
+do $$
+begin
+  if exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.prosecdef
+      and (has_function_privilege('anon',p.oid,'EXECUTE') or has_function_privilege('authenticated',p.oid,'EXECUTE'))
+  ) then raise exception 'Privileged public function still exposed'; end if;
+  if (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='clear_road_private' and p.prosecdef) <> 7 then
+    raise exception 'Missing private implementations';
+  end if;
+  if has_schema_privilege('anon','clear_road_private','CREATE') or
+     has_schema_privilege('authenticated','clear_road_private','CREATE') then
+    raise exception 'Client can create private objects';
+  end if;
+end $$;
 set local role anon;
 do $$
 begin
@@ -65,6 +81,11 @@ begin
   perform set_config('request.jwt.claim.sub', gen_random_uuid()::text, true);
   perform public.get_my_session();
   perform public.confirm_report((v_report->>'id')::uuid, 'STILL_DEY');
+  perform public.post_incident_message((v_report->>'id')::uuid, 'Transaction-only verification');
+  if not exists (select 1 from public.get_incident_messages((v_report->>'id')::uuid)) then
+    raise exception 'Message read failed';
+  end if;
+  perform public.flag_content('REPORT', (v_report->>'id')::uuid, null, 'SPAM', 'Transaction-only verification');
 end $$;
 reset role;
 select 'PASS: RLS, privileges, trigger, public map read, session, report creation and confirmation' as result;

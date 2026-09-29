@@ -44,3 +44,19 @@ Final advisor result: **0 errors, 10 warnings** (down from 15 after the first fi
 - Leaked-password protection remains disabled. Clear Road's frontend uses anonymous sign-in, not password login. Supabase documents this protection as Pro-plan-and-above; no paid upgrade or auth-provider change was made. Enable it before introducing password accounts.
 
 References: [anonymous users use authenticated role](https://supabase.com/docs/guides/auth/auth-anonymous), [password protection availability](https://supabase.com/docs/guides/auth/password-security).
+
+## Final resolution of remaining database warnings
+
+Applied `20260929213501_isolate_privileged_rpc_implementations.sql` after a successful rollback-only trial:
+
+- Moved the seven privileged implementations into `clear_road_private`, outside the exposed API schemas.
+- Retained the same public names, parameters, defaults, return shapes and volatility as SECURITY INVOKER wrappers with an empty search_path.
+- Kept existing implementation authentication/input checks and restricted execute grants. Private schema USAGE permits wrapper execution; it does not expose the schema through PostgREST. Neither browser role can CREATE objects there. This is API isolation, not elimination of the controlled privileged operations.
+- All seven endpoint workflows passed transactional regression tests; all test writes were rolled back.
+- HTTP verification passed: public map RPC works, unsigned get_my_session is denied, and attempts to address clear_road_private directly fail with PGRST106 (schema not exposed).
+
+The latest security advisor contains **zero errors and one warning only**, `auth_leaked_password_protection`. All database warnings are cleared.
+
+The dashboard confirms this organization is on Free and leaked-password protection is Pro-only. The user explicitly chose **Keep Free; document the limitation**. No upgrade was purchased and no authentication provider was disabled to hide the warning. This remains a known limitation, relevant if password-based accounts are used. The application currently uses anonymous sign-in.
+
+Future RPC implementation edits must target `clear_road_private`; preserve the public invoker wrappers and their grants. Do not recreate SECURITY DEFINER implementations in public. Do not add clear_road_private to the API's exposed schemas.
